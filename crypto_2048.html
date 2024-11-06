@@ -1,0 +1,164 @@
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>2048 Crypto Edition</title>
+    <style>
+        body {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+            margin: 0;
+            font-family: Arial, sans-serif;
+            background-color: #121212;
+            color: #ffffff;
+        }
+        .game-container {
+            width: 320px;
+            height: 320px;
+            background-color: #333333;
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            gap: 10px;
+            border: 5px solid #ffffff;
+            padding: 10px;
+        }
+        .tile {
+            width: 70px;
+            height: 70px;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            font-size: 24px;
+            color: #ffffff;
+            font-weight: bold;
+            border-radius: 8px;
+        }
+        .tile-2 { background-color: #8e44ad; }
+        .tile-4 { background-color: #3498db; }
+        .tile-8 { background-color: #f39c12; }
+        .tile-16 { background-color: #d35400; }
+        .tile-32 { background-color: #c0392b; }
+        .tile-64 { background-color: #e74c3c; }
+        .tile-128 { background-color: #27ae60; }
+        .tile-256 { background-color: #2ecc71; }
+        .tile-512 { background-color: #16a085; }
+        .tile-1024 { background-color: #f1c40f; }
+        .tile-2048 { background-color: #e67e22; }
+    </style>
+</head>
+<body>
+    <div class="game-container" id="gameContainer"></div>
+
+    <script>
+        const cryptoSymbols = {
+            2: "₿", 4: "Ξ", 8: "Ł", 16: "¥", 32: "Ɖ",
+            64: "Ξ", 128: "₿", 256: "Ł", 512: "¥",
+            1024: "Ɖ", 2048: "Ξ"
+        };
+
+        let board = [
+            [0, 0, 0, 0],
+            [0, 0, 0, 0],
+            [0, 0, 0, 0],
+            [0, 0, 0, 0]
+        ];
+
+        function getRandomEmptyTile() {
+            const emptyTiles = [];
+            for (let i = 0; i < 4; i++) {
+                for (let j = 0; j < 4; j++) {
+                    if (board[i][j] === 0) {
+                        emptyTiles.push({ x: i, y: j });
+                    }
+                }
+            }
+            return emptyTiles[Math.floor(Math.random() * emptyTiles.length)];
+        }
+
+        function addNewTile() {
+            const tile = getRandomEmptyTile();
+            if (tile) {
+                board[tile.x][tile.y] = Math.random() < 0.9 ? 2 : 4;
+            }
+        }
+
+        function drawBoard() {
+            const gameContainer = document.getElementById("gameContainer");
+            gameContainer.innerHTML = "";
+            for (let i = 0; i < 4; i++) {
+                for (let j = 0; j < 4; j++) {
+                    const tile = document.createElement("div");
+                    const value = board[i][j];
+                    tile.classList.add("tile");
+                    tile.classList.add(`tile-${value}`);
+                    tile.innerHTML = value > 0 ? (cryptoSymbols[value] || value) : "";
+                    gameContainer.appendChild(tile);
+                }
+            }
+        }
+
+        function slide(row) {
+            row = row.filter(value => value);
+            for (let i = 0; i < row.length - 1; i++) {
+                if (row[i] === row[i + 1]) {
+                    row[i] *= 2;
+                    row[i + 1] = 0;
+                }
+            }
+            return row.filter(value => value).concat(Array(4 - row.length).fill(0));
+        }
+
+        function rotateBoard() {
+            const newBoard = board[0].map((_, index) => board.map(row => row[index]));
+            board = newBoard.reverse();
+        }
+
+        function moveLeft() {
+            for (let i = 0; i < 4; i++) {
+                board[i] = slide(board[i]);
+            }
+            addNewTile();
+            drawBoard();
+        }
+
+        function moveRight() {
+            for (let i = 0; i < 4; i++) {
+                board[i] = slide(board[i].reverse()).reverse();
+            }
+            addNewTile();
+            drawBoard();
+        }
+
+        function moveUp() {
+            rotateBoard();
+            rotateBoard();
+            rotateBoard();
+            moveLeft();
+            rotateBoard();
+        }
+
+        function moveDown() {
+            rotateBoard();
+            moveLeft();
+            rotateBoard();
+            rotateBoard();
+            rotateBoard();
+        }
+
+        document.addEventListener("keydown", event => {
+            if (event.key === "ArrowLeft") moveLeft();
+            if (event.key === "ArrowRight") moveRight();
+            if (event.key === "ArrowUp") moveUp();
+            if (event.key === "ArrowDown") moveDown();
+        });
+
+        addNewTile();
+        addNewTile();
+        drawBoard();
+    </script>
+</body>
+</html>
