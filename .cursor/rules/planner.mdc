@@ -1,0 +1,14 @@
+---
+description: AI task planner — follow planner/AGENT.md
+globs: planner/**/*
+alwaysApply: false
+---
+
+When the user talks about the planner, ПЛАНЕР, задачи, приоритет, или команды `+` / `готово` / `список` / `фокус` / `разбей` / `стоп`:
+
+1. Read `planner/AGENT.md` and `planner/memory/` before changing the board.
+2. Formulate, score, and break down with those rules. Prefer `python3 -m planner.cli` for list/next/score/lint/log.
+3. Write every decision or `готово` to `planner/memory/TASK_LOG.md` (private ids → `memory/private/`).
+4. Do not mix projects. Do not invent VisaSmart/Мобилог/личное tasks.
+5. Do not start Telegram/Slack unless the user names the channel.
+6. Never commit `planner/ПЛАНЕР.md` or `memory/private/*` task logs.

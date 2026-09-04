@@ -11,7 +11,7 @@
 3. Результат попадает на доску `ПЛАНЕР.md` (локальный файл, не коммитится).
 4. Каждое решение и закрытие задачи пишется в `memory/` — это и есть «память» для модернизации.
 
-ИИ здесь — сам агент Cursor, по фиксированным правилам. Отдельный API не нужен.
+ИИ здесь — сам агент Cursor, по фиксированным правилам. Скоринг, lint и «следующий шаг» — ещё и в `python -m planner.cli` (без отдельного LLM-API).
 
 ## Файлы
 
@@ -36,6 +36,14 @@ cp planner/ПЛАНЕР.example.md planner/ПЛАНЕР.md
 Откройте папку `planner/` (или `C:\Users\user\Plans` с копией этих файлов) как workspace. Вставьте текст из `СТАРТ_ЧАТА.md` в новый чат.
 
 Команды: `+ задача` · `срок …` · `готово …` · `список` · `фокус: проект` · `разбей …`
+
+```bash
+python3 -m planner.cli next --board planner/ПЛАНЕР.md
+python3 -m planner.cli list --board planner/ПЛАНЕР.md --focus restoris
+python3 -m unittest planner.tests.test_engine
+```
+
+Образец ИИ-прохода без рабочих id: `planner/fixtures/backlog.example.md`.
 
 ## Память и улучшение агента
 
