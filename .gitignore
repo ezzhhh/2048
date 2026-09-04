@@ -3,3 +3,6 @@
 planner/ПЛАНЕР.md
 planner/memory/private/*
 !planner/memory/private/README.md
+
+__pycache__/
+*.py[cod]
