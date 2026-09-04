@@ -1,0 +1,5 @@
+# Живая доска и частная память — не в публичный репозиторий
+ПЛАНЕР.md
+planner/ПЛАНЕР.md
+planner/memory/private/*
+!planner/memory/private/README.md
