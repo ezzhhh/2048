@@ -1,0 +1,9 @@
+{
+  "name": "Планер",
+  "short_name": "Планер",
+  "start_url": "/",
+  "display": "standalone",
+  "background_color": "#f4efe6",
+  "theme_color": "#1b3a2f",
+  "lang": "ru"
+}

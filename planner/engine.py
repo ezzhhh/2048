@@ -111,6 +111,12 @@ def normalize_project(value: str | None) -> str | None:
 
 def parse_due(value: str, today: date) -> date | None:
     text = value.strip()
+    iso = re.fullmatch(r"(\d{4})-(\d{2})-(\d{2})", text)
+    if iso:
+        try:
+            return date(int(iso.group(1)), int(iso.group(2)), int(iso.group(3)))
+        except ValueError:
+            return None
     match = re.fullmatch(r"(\d{1,2})\.(\d{1,2})(?:\.(\d{2,4}))?", text)
     if not match:
         return None

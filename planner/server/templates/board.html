@@ -1,0 +1,114 @@
+{% extends "base.html" %}
+{% block body %}
+<section class="next card">
+  <h1>Следующий шаг</h1>
+  {% for line in next_lines %}
+  <p>{{ line }}</p>
+  {% endfor %}
+</section>
+
+<section class="card">
+  <h2>Новая задача</h2>
+  <form method="post" action="/tasks" class="stack">
+    <label>Тезис / формулировка
+      <input name="title" required placeholder="Добавить этап Отказ с причинами">
+    </label>
+    <div class="row">
+      <label>Проект
+        <select name="project">
+          {% for p in projects %}
+          <option value="{{ p }}" {% if focus == p %}selected{% endif %}>{{ p }}</option>
+          {% endfor %}
+        </select>
+      </label>
+      <label>Срок
+        <input name="due" type="date">
+      </label>
+    </div>
+    <label>Заметка
+      <input name="note" placeholder="блокер / позже / кратко">
+    </label>
+    <div class="checks">
+      <label><input type="checkbox" name="blocker" value="1"> блокер</label>
+      <label><input type="checkbox" name="later" value="1"> позже</label>
+    </div>
+    <button type="submit" class="primary">+ Добавить (ИИ посчитает приоритет)</button>
+  </form>
+</section>
+
+<section class="toolbar">
+  <form method="post" action="/focus" class="row">
+    <label>Фокус
+      <select name="focus">
+        <option value="">все проекты</option>
+        {% for p in projects %}
+        <option value="{{ p }}" {% if focus == p %}selected{% endif %}>{{ p }}</option>
+        {% endfor %}
+      </select>
+    </label>
+    <button type="submit">Ок</button>
+  </form>
+  <form method="get" action="/" class="row">
+    <label>Фильтр
+      <select name="project" onchange="this.form.submit()">
+        <option value="">открытые</option>
+        {% for p in projects %}
+        <option value="{{ p }}" {% if filter == p %}selected{% endif %}>{{ p }}</option>
+        {% endfor %}
+      </select>
+    </label>
+  </form>
+</section>
+
+{% for item in items %}
+<article class="task card p-{{ item.score.code|lower }}">
+  <header>
+    <span class="prio">{{ item.score.code }}</span>
+    <strong>{{ item.row.title }}</strong>
+  </header>
+  <p class="meta">
+    {{ item.row.project or "без проекта" }}
+    {% if item.row.due %} · срок {{ item.row.due }}{% endif %}
+    {% if item.row.status == "~" %} · в работе{% endif %}
+    · {{ item.score.why }}
+  </p>
+  {% if item.decompose %}<p class="warn">Нужны этапы — добавьте ниже.</p>{% endif %}
+  {% for issue in item.issues %}
+    <p class="{{ issue.level }}">{{ issue.message }}</p>
+  {% endfor %}
+
+  {% for child in kids.get(item.row.id, []) %}
+  <div class="child">
+    <span class="prio tiny">{{ child.score.code }}</span>
+    {{ child.row.title }}
+    <form method="post" action="/tasks/{{ child.row.id }}/done" class="inline">
+      <button type="submit">готово</button>
+    </form>
+  </div>
+  {% endfor %}
+
+  <form method="post" action="/tasks" class="stage">
+    <input type="hidden" name="parent_id" value="{{ item.row.id }}">
+    <input type="hidden" name="project" value="{{ item.row.project or 'другое' }}">
+    <input name="title" required placeholder="Этап: зафиксировать справочник">
+    <button type="submit">+ этап</button>
+  </form>
+
+  <div class="actions">
+    {% if item.row.status == " " %}
+    <form method="post" action="/tasks/{{ item.row.id }}/start"><button type="submit">в работу</button></form>
+    {% endif %}
+    <form method="post" action="/tasks/{{ item.row.id }}/done" class="stack tight">
+      <input name="decision" placeholder="Решение (в память)">
+      <input name="outcome" placeholder="Исход">
+      <input name="lesson" placeholder="Урок агенту, если есть">
+      <button type="submit" class="primary">готово</button>
+    </form>
+  </div>
+</article>
+{% endfor %}
+
+{% if not items %}
+<p class="muted">Открытых задач нет. Добавьте тезис выше.</p>
+{% endif %}
+{% endblock %}

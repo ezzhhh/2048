@@ -6,3 +6,7 @@ planner/memory/private/*
 
 __pycache__/
 *.py[cod]
+planner/data/
+planner/server/.env
+*.sqlite
+*.sqlite-journal

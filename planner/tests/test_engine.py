@@ -46,6 +46,14 @@ class ParseAndScoreTests(unittest.TestCase):
         scored = score_priority(task, today=TODAY)
         self.assertEqual(scored.code, "P1")
 
+    def test_iso_due_today_is_p0(self):
+        task = parse_task_line(
+            "- [ ] Добавить этап Отказ | проект: restoris | срок: 2026-09-04 | блокер",
+            today=TODAY,
+        )
+        scored = score_priority(task, today=TODAY)
+        self.assertEqual(scored.code, "P0")
+
     def test_due_within_three_days(self):
         task = parse_task_line(
             "- [ ] Собрать таблицу упаковки | проект: restoris | срок: 07.09",
