@@ -1,0 +1,30 @@
+{% extends "base.html" %}
+{% block title %}Настройка · Планер{% endblock %}
+{% block body %}
+<section class="card">
+  <h1>Настройка с телефона</h1>
+  <p class="muted">Один сервер, только вы. Git не нужен. Можно заполнить и сразу пользоваться с ПК и ноута.</p>
+  {% if error %}<p class="error">{{ error }}</p>{% endif %}
+  <form method="post" action="/setup" class="stack">
+    <label>Новый пароль (не короче 8 знаков)
+      <input name="password" type="password" autocomplete="new-password" placeholder="оставьте пустым, чтобы оставить текущий">
+    </label>
+    <label>Фокус на старте
+      <select name="focus">
+        <option value="">все проекты</option>
+        {% for p in projects %}
+        <option value="{{ p }}" {% if focus == p %}selected{% endif %}>{{ p }}</option>
+        {% endfor %}
+      </select>
+    </label>
+    <fieldset class="stack">
+      <legend>Откуда взять задачи</legend>
+      <label class="choice"><input type="radio" name="import_from" value="live" {% if has_live %}checked{% endif %} {% if not has_live %}disabled{% endif %}> Текущий backlog (ПЛАНЕР.md){% if not has_live %} — файла нет на сервере{% endif %}</label>
+      <label class="choice"><input type="radio" name="import_from" value="example" {% if not has_live %}checked{% endif %}> Пример (без рабочих данных)</label>
+      <label class="choice"><input type="radio" name="import_from" value="none"> Пустая доска — сам добавлю</label>
+    </fieldset>
+    <p class="muted">Сейчас в базе задач: {{ task_count }}</p>
+    <button type="submit" class="primary">Сохранить и открыть доску</button>
+  </form>
+</section>
+{% endblock %}

@@ -48,6 +48,9 @@ input, select {
 .checks label { flex-direction: row; align-items: center; }
 .muted { color: var(--muted); }
 .error { color: var(--danger); }
+.ok { color: var(--accent); font-weight: 600; }
+fieldset { border: 1px solid var(--line); border-radius: 12px; padding: 12px; }
+.choice { flex-direction: row; align-items: flex-start; gap: 10px; }
 .warn { color: var(--warn); }
 .meta { color: var(--muted); font-size: 14px; margin: 6px 0; }
 .prio {

@@ -6,7 +6,7 @@ from datetime import date, datetime
 from pathlib import Path
 import sqlite3
 
-from planner.engine import Task, normalize_project, parse_due
+from planner.engine import Task, normalize_project, parse_due, parse_task_line, score_priority
 
 
 SCHEMA = """
@@ -202,3 +202,41 @@ def list_memory(conn: sqlite3.Connection, limit: int = 100) -> list[sqlite3.Row]
             "SELECT * FROM memory ORDER BY id DESC LIMIT ?", (limit,)
         ).fetchall()
     )
+
+
+def task_count(conn: sqlite3.Connection, include_done: bool = True) -> int:
+    sql = "SELECT COUNT(*) AS n FROM tasks"
+    if not include_done:
+        sql += " WHERE status != 'x'"
+    return int(conn.execute(sql).fetchone()["n"])
+
+
+def import_markdown(conn: sqlite3.Connection, markdown: str, today: date | None = None) -> int:
+    """Load a ПЛАНЕР.md-style board. Nested lines become stages."""
+    today = today or date.today()
+    last_root: int | None = None
+    added = 0
+    for line in markdown.splitlines():
+        task = parse_task_line(line, today)
+        if not task:
+            continue
+        scored = score_priority(task, today=today)
+        due = task.due.isoformat() if task.due else None
+        parent_id = last_root if task.child else None
+        new_id = insert_task(
+            conn,
+            title=task.title,
+            project=task.project,
+            priority=scored.code,
+            due=due,
+            note=task.note,
+            part=task.part,
+            parent_id=parent_id,
+            later=task.later,
+            blocker=task.blocker,
+            status=task.status if task.status in {" ", "~", "x"} else " ",
+        )
+        if not task.child:
+            last_root = new_id
+        added += 1
+    return added

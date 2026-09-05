@@ -4,11 +4,15 @@ from __future__ import annotations
 
 from collections import defaultdict
 from datetime import datetime, timedelta
+import hashlib
 import hmac
 import os
+import secrets
 
 from fastapi import Request
 from fastapi.responses import RedirectResponse
+
+PBKDF2_ROUNDS = 200_000
 
 
 def env_user() -> str:
@@ -42,10 +46,33 @@ def record_failure(ip: str) -> None:
     _failures[ip].append(datetime.now())
 
 
-def check_password(user: str, password: str) -> bool:
-    return hmac.compare_digest(user, env_user()) and hmac.compare_digest(
-        password, env_password()
+def hash_password(password: str) -> str:
+    salt = secrets.token_hex(16)
+    digest = hashlib.pbkdf2_hmac(
+        "sha256", password.encode("utf-8"), bytes.fromhex(salt), PBKDF2_ROUNDS
     )
+    return f"pbkdf2${PBKDF2_ROUNDS}${salt}${digest.hex()}"
+
+
+def verify_password(password: str, stored: str) -> bool:
+    try:
+        scheme, rounds, salt, digest = stored.split("$", 3)
+    except ValueError:
+        return False
+    if scheme != "pbkdf2":
+        return False
+    check = hashlib.pbkdf2_hmac(
+        "sha256", password.encode("utf-8"), bytes.fromhex(salt), int(rounds)
+    )
+    return hmac.compare_digest(check.hex(), digest)
+
+
+def check_password(user: str, password: str, stored_hash: str = "") -> bool:
+    if not hmac.compare_digest(user, env_user()):
+        return False
+    if stored_hash:
+        return verify_password(password, stored_hash)
+    return hmac.compare_digest(password, env_password())
 
 
 def client_ip(request: Request) -> str:
