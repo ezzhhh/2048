@@ -1,0 +1,131 @@
+{% extends "base.html" %}
+{% block main_class %}board-page{% endblock %}
+{% block body %}
+<section class="next-bar">
+  <strong>Сейчас</strong>
+  {% for line in next_lines %}
+  <span>{{ line }}</span>
+  {% endfor %}
+</section>
+
+<nav class="chips" aria-label="Проекты">
+  <a class="chip {% if not filter %}on{% endif %}" href="/">все {{ open_count }}</a>
+  {% for col in all_columns %}
+  <a class="chip {% if filter == col.project %}on{% endif %} {% if col.focused %}focus{% endif %}"
+     href="/?project={{ col.project }}">{{ col.project }} {{ col.count }}</a>
+  {% endfor %}
+</nav>
+
+<details class="composer">
+  <summary>+ задача</summary>
+  <form method="post" action="/tasks" class="stack">
+    <input type="hidden" name="return_project" value="{{ filter }}">
+    <label>Тезис
+      <input name="title" required placeholder="Рассылка визмарт">
+    </label>
+    <div class="row">
+      <label>Проект
+        <select name="project">
+          {% for p in projects %}
+          <option value="{{ p }}" {% if (filter or focus) == p %}selected{% endif %}>{{ p }}</option>
+          {% endfor %}
+        </select>
+      </label>
+      <label>Срок
+        <input name="due" type="date">
+      </label>
+    </div>
+    <label>Заметка
+      <input name="note" placeholder="блокер / позже / кратко">
+    </label>
+    <div class="checks">
+      <label><input type="checkbox" name="blocker" value="1"> блокер</label>
+      <label><input type="checkbox" name="later" value="1"> позже</label>
+    </div>
+    <button type="submit" class="primary">Добавить</button>
+  </form>
+</details>
+
+<div class="kanban {% if filter %}kanban-one{% endif %}">
+  {% for col in columns %}
+  <section class="kanban-col {% if col.focused %}is-focus{% endif %}" data-project="{{ col.project }}">
+    <header class="col-head">
+      <h2>{{ col.project }}</h2>
+      <span class="count">{{ col.count }}</span>
+      {% if col.focused %}
+      <span class="focus-tag">фокус</span>
+      {% else %}
+      <form method="post" action="/focus" class="inline">
+        <input type="hidden" name="focus" value="{{ col.project }}">
+        <input type="hidden" name="return_project" value="{{ filter }}">
+        <button type="submit" class="quiet">в фокус</button>
+      </form>
+      {% endif %}
+    </header>
+
+    {% for item in col.tasks %}
+    <article class="task card p-{{ item.score.code|lower }}">
+      <header>
+        <span class="prio">{{ item.score.code }}</span>
+        <strong>{{ item.row.title }}</strong>
+      </header>
+      <p class="meta">
+        {% if item.row.due %}срок {{ item.row.due }} · {% endif %}
+        {% if item.row.status == "~" %}в работе · {% endif %}
+        {{ item.score.why }}
+      </p>
+      {% if item.decompose %}<p class="warn">Нужны этапы</p>{% endif %}
+
+      {% for child in kids.get(item.row.id, []) %}
+      <div class="child">
+        <span class="prio tiny">{{ child.score.code }}</span>
+        <span>{{ child.row.title }}</span>
+        <form method="post" action="/tasks/{{ child.row.id }}/done" class="inline">
+          <input type="hidden" name="return_project" value="{{ filter }}">
+          <button type="submit">готово</button>
+        </form>
+      </div>
+      {% endfor %}
+
+      <div class="task-actions">
+        {% if item.row.status == " " %}
+        <form method="post" action="/tasks/{{ item.row.id }}/start" class="inline">
+          <input type="hidden" name="return_project" value="{{ filter }}">
+          <button type="submit">в работу</button>
+        </form>
+        {% endif %}
+        <form method="post" action="/tasks/{{ item.row.id }}/done" class="inline">
+          <input type="hidden" name="return_project" value="{{ filter }}">
+          <button type="submit" class="primary slim">готово</button>
+        </form>
+      </div>
+
+      <details class="more">
+        <summary>ещё</summary>
+        <form method="post" action="/tasks" class="stage">
+          <input type="hidden" name="parent_id" value="{{ item.row.id }}">
+          <input type="hidden" name="project" value="{{ item.row.project or 'другое' }}">
+          <input type="hidden" name="return_project" value="{{ filter }}">
+          <input name="title" required placeholder="Этап">
+          <button type="submit">+ этап</button>
+        </form>
+        <form method="post" action="/tasks/{{ item.row.id }}/done" class="stack tight">
+          <input type="hidden" name="return_project" value="{{ filter }}">
+          <input name="decision" placeholder="Решение (в память)">
+          <input name="outcome" placeholder="Исход">
+          <input name="lesson" placeholder="Урок, если есть">
+          <button type="submit" class="primary">готово с записью</button>
+        </form>
+      </details>
+    </article>
+    {% else %}
+    <p class="muted empty">пусто</p>
+    {% endfor %}
+  </section>
+  {% endfor %}
+</div>
+
+{% if not open_count %}
+<p class="muted">Открытых задач нет. Добавьте тезис выше или напишите в Telegram.</p>
+{% endif %}
+{% endblock %}

@@ -1,0 +1,4 @@
+# Подставьте свой домен. Caddy сам возьмёт HTTPS.
+planer.example.com {
+	reverse_proxy 127.0.0.1:8787
+}

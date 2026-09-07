@@ -1,0 +1,18 @@
+{% extends "base.html" %}
+{% block title %}Память · Планер{% endblock %}
+{% block body %}
+<h1>Память агента</h1>
+<p class="muted">Закрытые задачи и развилки. Это то, по чему улучшаем правила.</p>
+{% for e in entries %}
+<article class="card">
+  <p class="meta">{{ e.day }} · {{ e.project }}</p>
+  <strong>{{ e.task }}</strong>
+  <p>Решение: {{ e.decision }}</p>
+  <p>Исход: {{ e.outcome }}</p>
+  {% if e.lesson %}<p>Урок: {{ e.lesson }}</p>{% endif %}
+</article>
+{% endfor %}
+{% if not entries %}
+<p class="muted">Пока пусто. Закройте задачу с доски — запись появится здесь.</p>
+{% endif %}
+{% endblock %}
