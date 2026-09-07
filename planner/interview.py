@@ -9,6 +9,7 @@ from planner.engine import PROJECTS, normalize_project
 from planner.ingest import (
     detect_project,
     formulate_title,
+    fuzzy_project,
     ingest_thesis,
     normalize_typos,
     parse_ru_due,
@@ -40,7 +41,18 @@ def questions_for(raw: str) -> list[str]:
             "Это webhook «Доставка» после Отказа?",
             "Свой контур или n8n Railway?",
         ]
-    if normalize_project(raw) in PROJECTS:
+    project = fuzzy_project(raw)
+    if "рассыл" in blob and project == "визасмарт":
+        return [
+            "База получателей уже есть?",
+            "Срок? Если да — дата или «до конца недели».",
+        ]
+    if "рассыл" in blob:
+        return [
+            "Это VisaSmart?",
+            "Срок? Если да — дата.",
+        ]
+    if project in PROJECTS:
         return [
             "Какой один проверяемый результат будет «готово»?",
             "Срок есть? Если да — дата.",
@@ -93,25 +105,34 @@ def add_answer(conn, text: str):
     return draft
 
 
+def _title_source(raw: str, qa: list[tuple[str, str]]) -> str:
+    # Keep the original thesis when it already names the work.
+    # Do not replace «рассылка визмарт» with the «готово» answer.
+    words = raw.split()
+    only_project = bool(fuzzy_project(raw)) and len(words) <= 1
+    if only_project:
+        for question, answer in qa:
+            if "готово" in question.lower() or "результат" in question.lower():
+                return answer
+    return raw
+
+
 def finish_draft(conn, draft: dict):
     qa = list(zip(draft["questions"], draft["answers"]))
     note = " | ".join(f"{q} → {a}" for q, a in qa)
-    blob = " ".join([draft["raw"], *[a for _q, a in qa]])
+    # Never scan the questions: they list every project name (restoris, …).
+    answers_blob = " ".join(answer for _q, answer in qa)
     project = None
     for _q, answer in qa:
-        named = normalize_project(answer)
-        if named in PROJECTS:
+        named = fuzzy_project(answer)
+        if named:
             project = named
             break
     if project is None:
-        project = detect_project(blob, focus=db.get_setting(conn, "focus"))
-    title_source = draft["raw"]
-    if normalize_project(draft["raw"]) in PROJECTS or len(draft["raw"].split()) <= 2:
-        for question, answer in qa:
-            if "готово" in question.lower() or "результат" in question.lower():
-                title_source = answer
-                break
-    title = formulate_title(title_source)
+        project = fuzzy_project(draft["raw"]) or fuzzy_project(answers_blob)
+    if project is None:
+        project = detect_project(f"{draft['raw']} {answers_blob}", focus="")
+    title = formulate_title(_title_source(draft["raw"], qa))
     due = None
     for question, answer in qa:
         if "срок" in question.lower() or "дата" in question.lower():

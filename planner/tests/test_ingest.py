@@ -10,7 +10,16 @@ class IngestTests(unittest.TestCase):
     def test_formulate_adds_verb(self):
         self.assertEqual(formulate_title("реализовать таблицу"), "Реализовать таблицу")
         self.assertEqual(formulate_title("реализовать талицу"), "Реализовать таблицу")
+        self.assertEqual(formulate_title("рассылка по базе"), "Реализовать рассылку")
+        self.assertEqual(formulate_title("рассылка визмарт"), "Реализовать рассылку")
         self.assertTrue(formulate_title("таблица упаковки").startswith("Сделать"))
+
+    def test_vismart_typo_is_visasmart_not_focus(self):
+        self.assertEqual(detect_project("визмарт", focus="ресторис"), "визасмарт")
+        self.assertEqual(detect_project("рассылка визмарт", focus="ресторис"), "визасмарт")
+        stages = suggest_stages("Реализовать рассылку", "визасмарт", "рассылка по базе")
+        self.assertTrue(any("баз" in s.lower() or "шаблон" in s.lower() for s in stages))
+        self.assertFalse(any("вводн" in s.lower() for s in stages))
 
     def test_table_goes_to_restoris_with_stages(self):
         self.assertEqual(detect_project("реализовать таблицу упаковки"), "ресторис")

@@ -24,6 +24,12 @@ class InterviewTests(unittest.TestCase):
             self.assertTrue(result.stages)
             self.assertEqual(result.project, "ресторис")
 
+    def test_vismart_typo_skips_project_question(self):
+        qs = questions_for("рассылка визмарт")
+        self.assertEqual(len(qs), 2)
+        self.assertTrue(any("срок" in q.lower() or "База" in q for q in qs))
+        self.assertFalse(any("мобилог" in q.lower() for q in qs))
+
     def test_visasmart_mailing_keeps_project_and_real_stages(self):
         with tempfile.TemporaryDirectory() as tmp:
             conn = connect(Path(tmp) / "t.sqlite")
@@ -35,6 +41,49 @@ class InterviewTests(unittest.TestCase):
             self.assertIn("рассыл", result.title.lower())
             self.assertTrue(any("баз" in s.lower() or "шаблон" in s.lower() for s in result.stages))
             self.assertFalse(any("ресторис" in s.lower() for s in result.stages))
+
+    def test_screenshot_vismart_not_restoris_generic_stages(self):
+        """Exact Telegram thread: рассылка визмарт → визмарт → рассылка по базе → до конца недели."""
+        with tempfile.TemporaryDirectory() as tmp:
+            conn = connect(Path(tmp) / "t.sqlite")
+            conn.execute(
+                "INSERT INTO settings(key, value) VALUES('focus', 'ресторис')"
+            )
+            conn.commit()
+            result = finish_draft(
+                conn,
+                {
+                    "raw": "рассылка визмарт",
+                    "questions": [
+                        "Проект: restoris, визасмарт или мобилог?",
+                        "Какой один проверяемый результат будет «готово»?",
+                        "Срок есть? Если да — дата.",
+                    ],
+                    "answers": ["визмарт", "рассылка по базе", "до конца недели"],
+                    "step": 3,
+                },
+            )
+            self.assertEqual(result.project, "визасмарт")
+            self.assertEqual(result.title, "Реализовать рассылку")
+            self.assertTrue(
+                any("баз" in s.lower() or "шаблон" in s.lower() for s in result.stages)
+            )
+            self.assertFalse(any("вводн" in s.lower() for s in result.stages))
+
+    def test_new_mailing_path_skips_project_and_stays_visasmart(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            conn = connect(Path(tmp) / "t.sqlite")
+            conn.execute(
+                "INSERT INTO settings(key, value) VALUES('focus', 'ресторис')"
+            )
+            conn.commit()
+            start_draft(conn, "рассылка визмарт")
+            add_answer(conn, "да, база есть")
+            draft = add_answer(conn, "до конца недели")
+            result = finish_draft(conn, draft)
+            self.assertEqual(result.project, "визасмарт")
+            self.assertEqual(result.title, "Реализовать рассылку")
+            self.assertTrue(any("баз" in s.lower() or "шаблон" in s.lower() for s in result.stages))
 
 
 if __name__ == "__main__":

@@ -18,7 +18,7 @@ from planner.server import db
 
 PROJECT_HINTS = (
     (("ресторис", "restoris", "упаков", "unisender", "воронк", "webhook", "mesto.top"), "ресторис"),
-    (("визасмарт", "visasmart", "golden", "виза"), "визасмарт"),
+    (("визасмарт", "визмарт", "визамарт", "visasmart", "vismart", "golden", "виза"), "визасмарт"),
     (("мобилог", "mobilog", "перевоз"), "мобилог"),
     (("место", "mesto"), "место"),
     (("личное", "дом", "семья"), "личное"),
@@ -89,11 +89,38 @@ class IngestResult:
     reused: str = ""
 
 
-def detect_project(text: str, focus: str = "") -> str:
+def fuzzy_project(text: str) -> str | None:
     blob = normalize_typos(text.lower())
+    named = normalize_project(text)
+    if named in PROJECTS:
+        return named
+    if any(
+        x in blob
+        for x in (
+            "визмарт",
+            "визсмарт",
+            "визасмарт",
+            "визамарт",
+            "vismart",
+            "vizsmart",
+            "visasmart",
+            "golden",
+        )
+    ):
+        return "визасмарт"
+    if "виз" in blob and ("смарт" in blob or "март" in blob or "рассыл" in blob):
+        return "визасмарт"
     for hints, project in PROJECT_HINTS:
         if any(hint in blob for hint in hints):
             return project
+    return None
+
+
+def detect_project(text: str, focus: str = "") -> str:
+    found = fuzzy_project(text)
+    if found:
+        return found
+    blob = normalize_typos(text.lower())
     if any(word in blob for word in ("таблиц", "упаков", "воронк")):
         return normalize_project(focus) or "ресторис"
     return normalize_project(focus) or "другое"
@@ -118,6 +145,9 @@ def parse_ru_due(text: str, today: date | None = None) -> date | None:
     blob = text.lower()
     if "завтра" in blob:
         return today + timedelta(days=1)
+    if "недел" in blob:
+        delta = (6 - today.weekday()) % 7
+        return today + timedelta(days=delta or 7)
     for name, weekday in WEEKDAYS.items():
         if name in blob:
             delta = (weekday - today.weekday()) % 7
@@ -136,6 +166,8 @@ def formulate_title(raw: str) -> str:
     first, *rest = text.split(None, 1)
     tail = rest[0] if rest else ""
     low = first.lower()
+    if "рассыл" in text.lower():
+        return "Реализовать рассылку"
     if low.startswith("реализован"):
         return ("Реализовать " + tail).strip() or "Реализовать"
     if low in EMPTY_VERBS and len(tail.split()) < 2:
