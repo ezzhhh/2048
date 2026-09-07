@@ -5,7 +5,14 @@ from __future__ import annotations
 import json
 from pathlib import Path
 
-from planner.ingest import formulate_title, ingest_thesis, normalize_typos
+from planner.engine import PROJECTS, normalize_project
+from planner.ingest import (
+    detect_project,
+    formulate_title,
+    ingest_thesis,
+    normalize_typos,
+    parse_ru_due,
+)
 from planner.server import db
 
 CONTEXT_PATH = Path(__file__).resolve().parent / "CONTEXT.md"
@@ -32,6 +39,11 @@ def questions_for(raw: str) -> list[str]:
         return [
             "Это webhook «Доставка» после Отказа?",
             "Свой контур или n8n Railway?",
+        ]
+    if normalize_project(raw) in PROJECTS:
+        return [
+            "Какой один проверяемый результат будет «готово»?",
+            "Срок есть? Если да — дата.",
         ]
     return [
         "Проект: restoris, визасмарт или мобилог?",
@@ -82,13 +94,37 @@ def add_answer(conn, text: str):
 
 
 def finish_draft(conn, draft: dict):
-    qa = []
-    for q, a in zip(draft["questions"], draft["answers"]):
-        qa.append(f"{q} → {a}")
-    note = " | ".join(qa)
-    title = formulate_title(draft["raw"])
-    enriched = f"{title}. {note}"
-    result = ingest_thesis(conn, enriched, focus=db.get_setting(conn, "focus") or "ресторис")
+    qa = list(zip(draft["questions"], draft["answers"]))
+    note = " | ".join(f"{q} → {a}" for q, a in qa)
+    blob = " ".join([draft["raw"], *[a for _q, a in qa]])
+    project = None
+    for _q, answer in qa:
+        named = normalize_project(answer)
+        if named in PROJECTS:
+            project = named
+            break
+    if project is None:
+        project = detect_project(blob, focus=db.get_setting(conn, "focus"))
+    title_source = draft["raw"]
+    if normalize_project(draft["raw"]) in PROJECTS or len(draft["raw"].split()) <= 2:
+        for question, answer in qa:
+            if "готово" in question.lower() or "результат" in question.lower():
+                title_source = answer
+                break
+    title = formulate_title(title_source)
+    due = None
+    for question, answer in qa:
+        if "срок" in question.lower() or "дата" in question.lower():
+            due = parse_ru_due(answer)
+    result = ingest_thesis(
+        conn,
+        draft["raw"],
+        focus=project,
+        title=title,
+        project=project,
+        due=due,
+        note=note,
+    )
     conn.execute("UPDATE drafts SET status = 'done' WHERE id = 1")
     conn.commit()
     return result

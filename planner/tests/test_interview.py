@@ -24,6 +24,18 @@ class InterviewTests(unittest.TestCase):
             self.assertTrue(result.stages)
             self.assertEqual(result.project, "ресторис")
 
+    def test_visasmart_mailing_keeps_project_and_real_stages(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            conn = connect(Path(tmp) / "t.sqlite")
+            start_draft(conn, "визасмарт")
+            add_answer(conn, "реализованна рассылка")
+            draft = add_answer(conn, "нужно начать завтра и закончить в воскресенье")
+            result = finish_draft(conn, draft)
+            self.assertEqual(result.project, "визасмарт")
+            self.assertIn("рассыл", result.title.lower())
+            self.assertTrue(any("баз" in s.lower() or "шаблон" in s.lower() for s in result.stages))
+            self.assertFalse(any("ресторис" in s.lower() for s in result.stages))
+
 
 if __name__ == "__main__":
     unittest.main()

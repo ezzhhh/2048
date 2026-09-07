@@ -3,7 +3,7 @@
 from __future__ import annotations
 
 from dataclasses import dataclass, field
-from datetime import date
+from datetime import date, timedelta
 
 from planner.engine import (
     ACTION_VERBS,
@@ -66,6 +66,15 @@ STAGE_PACKS = (
             "Проверить на тестовой сделке",
         ),
     ),
+    (
+        ("рассыл", "unisender", "письм"),
+        (
+            "Собрать базу получателей",
+            "Собрать текст и шаблон",
+            "Прогнать тестовую отправку",
+            "Запустить рассылку и проверить доходимость",
+        ),
+    ),
 )
 
 
@@ -85,9 +94,39 @@ def detect_project(text: str, focus: str = "") -> str:
     for hints, project in PROJECT_HINTS:
         if any(hint in blob for hint in hints):
             return project
-    if any(word in blob for word in ("таблиц", "реализов", "сделк", "воронк")):
+    if any(word in blob for word in ("таблиц", "упаков", "воронк")):
         return normalize_project(focus) or "ресторис"
     return normalize_project(focus) or "другое"
+
+
+WEEKDAYS = {
+    "понедельник": 0,
+    "вторник": 1,
+    "среда": 2,
+    "среду": 2,
+    "четверг": 3,
+    "пятница": 4,
+    "пятницу": 4,
+    "суббота": 5,
+    "субботу": 5,
+    "воскресенье": 6,
+}
+
+
+def parse_ru_due(text: str, today: date | None = None) -> date | None:
+    today = today or date.today()
+    blob = text.lower()
+    if "завтра" in blob:
+        return today + timedelta(days=1)
+    for name, weekday in WEEKDAYS.items():
+        if name in blob:
+            delta = (weekday - today.weekday()) % 7
+            if delta == 0:
+                delta = 7
+            return today + timedelta(days=delta)
+    from planner.engine import parse_due
+
+    return parse_due(text, today)
 
 
 def formulate_title(raw: str) -> str:
@@ -97,6 +136,8 @@ def formulate_title(raw: str) -> str:
     first, *rest = text.split(None, 1)
     tail = rest[0] if rest else ""
     low = first.lower()
+    if low.startswith("реализован"):
+        return ("Реализовать " + tail).strip() or "Реализовать"
     if low in EMPTY_VERBS and len(tail.split()) < 2:
         return f"Сделать {text}"
     if low in ACTION_VERBS or first[:1].isupper():
@@ -112,10 +153,9 @@ def suggest_stages(title: str, project: str, note: str = "") -> list[str]:
     task = Task(status=" ", title=title, project=project, note=note)
     if should_decompose(task) or len(title.split()) <= 3:
         return [
-            "Что именно должно получиться — один проверяемый результат?",
-            "В каком проекте это делать, если не restoris?",
-            "Сделать",
-            "Как проверим, что готово?",
+            "Собрать вводные и критерий готово",
+            "Сделать основную работу",
+            "Проверить результат",
         ]
     return []
 
@@ -133,21 +173,34 @@ def _match_existing(conn, title: str, project: str) -> str:
     return ""
 
 
-def ingest_thesis(conn, raw: str, focus: str = "", today: date | None = None) -> IngestResult:
+def ingest_thesis(
+    conn,
+    raw: str,
+    focus: str = "",
+    today: date | None = None,
+    *,
+    title: str | None = None,
+    project: str | None = None,
+    due: date | None = None,
+    note: str | None = None,
+) -> IngestResult:
     today = today or date.today()
-    title = formulate_title(raw)
-    project = detect_project(raw, focus=focus or db.get_setting(conn, "focus"))
+    title = title or formulate_title(raw)
+    project = project or detect_project(
+        raw, focus=focus or db.get_setting(conn, "focus")
+    )
     reused = _match_existing(conn, title, project)
-    note = f"из чата: {raw.strip()}"
-    task = Task(status="~", title=title, project=project, note=note)
-    scored = score_priority(task, today=today, focus=focus or None)
+    note = note or f"из чата: {raw.strip()}"
+    task = Task(status="~", title=title, project=project, note=note, due=due)
+    scored = score_priority(task, today=today, focus=project)
     stages = suggest_stages(title, project, note)
+    due_s = due.isoformat() if due else None
     parent_id = db.insert_task(
         conn,
         title=title,
         project=project,
         priority=scored.code,
-        due=None,
+        due=due_s,
         note=note,
         part=None,
         parent_id=None,
