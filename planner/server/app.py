@@ -81,6 +81,35 @@ def _board(request: Request):
     return rows, Board(tasks=tasks)
 
 
+def _board_url(project: str = "") -> str:
+    if project:
+        return f"/?project={project}"
+    return "/"
+
+
+def _columns(parents, focus: str):
+    by: dict[str, list] = {name: [] for name in PROJECTS}
+    for item in parents:
+        name = item["row"]["project"] or "другое"
+        if name not in by:
+            name = "другое"
+        by[name].append(item)
+    order = list(PROJECTS)
+    if focus in order:
+        order = [focus] + [name for name in PROJECTS if name != focus]
+    columns = []
+    for name in order:
+        columns.append(
+            {
+                "project": name,
+                "tasks": by[name],
+                "count": len(by[name]),
+                "focused": name == focus,
+            }
+        )
+    return columns
+
+
 def _decorate(request: Request, rows):
     today = date.today()
     focus = _focus(request) or None
@@ -153,25 +182,32 @@ def _register_routes(application: FastAPI) -> None:
         rows, engine_board = _board(request)
         open_rows = [row for row in rows if row["status"] != "x"]
         items = _decorate(request, open_rows)
-        if project:
-            items = [item for item in items if item["row"]["project"] == project]
         parents = [item for item in items if not item["row"]["parent_id"]]
         kids: dict[int, list] = {}
         for item in items:
             parent_id = item["row"]["parent_id"]
             if parent_id:
                 kids.setdefault(parent_id, []).append(item)
-        next_lines = suggest_next_steps(engine_board, focus=_focus(request) or None)
+        focus = _focus(request)
+        columns = _columns(parents, focus)
+        visible = columns
+        if project:
+            visible = [col for col in columns if col["project"] == project]
+        elif any(col["count"] for col in columns):
+            visible = [col for col in columns if col["count"] or col["focused"]]
+        next_lines = suggest_next_steps(engine_board, focus=focus or None)
         return templates.TemplateResponse(
             request,
             "board.html",
             {
-                "items": parents,
+                "columns": visible,
+                "all_columns": columns,
                 "kids": kids,
                 "next_lines": next_lines,
                 "projects": PROJECTS,
-                "focus": _focus(request),
+                "focus": focus,
                 "filter": project,
+                "open_count": len(parents),
             },
         )
 
@@ -185,6 +221,7 @@ def _register_routes(application: FastAPI) -> None:
         blocker: str = Form(""),
         later: str = Form(""),
         parent_id: str = Form(""),
+        return_project: str = Form(""),
     ):
         redirect = _guard(request)
         if redirect:
@@ -213,7 +250,7 @@ def _register_routes(application: FastAPI) -> None:
             blocker=bool(blocker),
             status="~" if parent_id == "" and should_decompose(engine_task) else " ",
         )
-        return RedirectResponse("/", status_code=303)
+        return RedirectResponse(_board_url(return_project), status_code=303)
 
     @application.post("/tasks/{task_id}/done")
     def done_task(
@@ -222,13 +259,14 @@ def _register_routes(application: FastAPI) -> None:
         decision: str = Form(""),
         outcome: str = Form(""),
         lesson: str = Form(""),
+        return_project: str = Form(""),
     ):
         redirect = _guard(request)
         if redirect:
             return redirect
         row = db.get_task(_conn(request), task_id)
         if not row:
-            return RedirectResponse("/", status_code=303)
+            return RedirectResponse(_board_url(return_project), status_code=303)
         db.update_task(_conn(request), task_id, status="x", done_at=db.now_iso())
         db.add_memory(
             _conn(request),
@@ -238,23 +276,27 @@ def _register_routes(application: FastAPI) -> None:
             outcome=outcome.strip() or "готово",
             lesson=lesson.strip(),
         )
-        return RedirectResponse("/", status_code=303)
+        return RedirectResponse(_board_url(return_project), status_code=303)
 
     @application.post("/tasks/{task_id}/start")
-    def start_task(request: Request, task_id: int):
+    def start_task(request: Request, task_id: int, return_project: str = Form("")):
         redirect = _guard(request)
         if redirect:
             return redirect
         db.update_task(_conn(request), task_id, status="~")
-        return RedirectResponse("/", status_code=303)
+        return RedirectResponse(_board_url(return_project), status_code=303)
 
     @application.post("/focus")
-    def set_focus(request: Request, focus: str = Form("")):
+    def set_focus(
+        request: Request,
+        focus: str = Form(""),
+        return_project: str = Form(""),
+    ):
         redirect = _guard(request)
         if redirect:
             return redirect
         db.set_setting(_conn(request), "focus", focus)
-        return RedirectResponse("/", status_code=303)
+        return RedirectResponse(_board_url(return_project), status_code=303)
 
     def _import_source(kind: str) -> tuple[str, str]:
         root = HERE.parent

@@ -17,6 +17,7 @@ class IngestTests(unittest.TestCase):
     def test_vismart_typo_is_visasmart_not_focus(self):
         self.assertEqual(detect_project("визмарт", focus="ресторис"), "визасмарт")
         self.assertEqual(detect_project("рассылка визмарт", focus="ресторис"), "визасмарт")
+        self.assertEqual(detect_project("позвонить", focus="ресторис"), "другое")
         stages = suggest_stages("Реализовать рассылку", "визасмарт", "рассылка по базе")
         self.assertTrue(any("баз" in s.lower() or "шаблон" in s.lower() for s in stages))
         self.assertFalse(any("вводн" in s.lower() for s in stages))

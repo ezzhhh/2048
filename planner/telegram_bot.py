@@ -8,17 +8,8 @@ from pathlib import Path
 
 import httpx
 
-from planner.ingest import format_result
-from planner.interview import (
-    active_draft,
-    add_answer,
-    cancel_draft,
-    finish_draft,
-    start_draft,
-)
-from planner.engine import suggest_next_steps, Board
+from planner.capture import handle_message
 from planner.server import db
-from planner.server.db import row_to_task
 
 API = "https://api.telegram.org"
 
@@ -47,47 +38,7 @@ def _send(token: str, chat_id: int, text: str) -> None:
 
 
 def _handle(conn, text: str) -> str:
-    raw = text.strip()
-    low = raw.lower()
-    if low in {"список", "/список", "/list", "list"}:
-        rows = [row for row in db.list_tasks(conn) if not row["parent_id"] and row["status"] != "x"]
-        board = Board(tasks=[row_to_task(row) for row in db.list_tasks(conn, include_done=True)])
-        nxt = "\n".join(suggest_next_steps(board, focus=db.get_setting(conn, "focus") or None))
-        lines = [nxt, ""]
-        for row in rows[:12]:
-            lines.append(f"{row['priority'] or '?'} · {row['title']}")
-        return "\n".join(lines).strip() or "Открытых задач нет."
-    if low.startswith("фокус"):
-        project = raw.split(None, 1)[1] if " " in raw else ""
-        db.set_setting(conn, "focus", project)
-        return f"фокус: {project or 'все'}"
-    if low.startswith("готово"):
-        needle = raw.split(None, 1)[1].lower() if " " in raw else ""
-        for row in db.list_tasks(conn):
-            if needle and needle not in str(row["title"]).lower():
-                continue
-            db.update_task(conn, row["id"], status="x", done_at=db.now_iso())
-            db.add_memory(
-                conn,
-                project=row["project"] or "другое",
-                task=row["title"],
-                decision="готово из telegram",
-                outcome="закрыто",
-            )
-            return f"готово: {row['title']}"
-        return "не нашёл задачу"
-    if low in {"отмена", "/отмена", "стоп"}:
-        cancel_draft(conn)
-        return "черновик сброшен"
-    draft = active_draft(conn)
-    if draft:
-        draft = add_answer(conn, raw)
-        if draft and draft["step"] < len(draft["questions"]):
-            return draft["questions"][draft["step"]]
-        result = finish_draft(conn, draft)
-        return "На доске:\n" + format_result(result)
-    question = start_draft(conn, raw)
-    return f"Коротко уточню (максимум 3).\n\n{question}"
+    return handle_message(conn, text)
 
 
 def run() -> None:
@@ -118,7 +69,13 @@ def run() -> None:
                 if str(chat_id) != str(allowed):
                     continue
                 if text in {"/start", "старт"}:
-                    _send(token, chat_id, "Пишите задачу обычным сообщением.\nсписок · готово … · фокус ресторис")
+                    _send(
+                        token,
+                        chat_id,
+                        "Пиши задачу одним сообщением — сразу на доску.\n"
+                        "проект или срок можно дописать следующим словом.\n"
+                        "список · готово · отмена · фокус ресторис",
+                    )
                     continue
                 _send(token, chat_id, _handle(conn, text))
         except Exception as exc:  # noqa: BLE001 — keep polling

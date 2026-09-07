@@ -56,6 +56,8 @@ class ServerTests(unittest.TestCase):
         board = self.client.get("/")
         self.assertEqual(board.status_code, 200)
         self.assertIn("Отказ", board.text)
+        self.assertIn("kanban", board.text)
+        self.assertIn('data-project="ресторис"', board.text)
         self.client.post("/logout")
         bad = self._login("secret-pass")
         self.assertEqual(bad.status_code, 401)
@@ -93,6 +95,26 @@ class ServerTests(unittest.TestCase):
         self.assertIn("сделали справочник", memory.text)
         self.assertIn("сначала причины", memory.text)
 
+    def test_board_is_horizontal_and_filters_project(self):
+        self.assertEqual(self._login().status_code, 303)
+        self.assertEqual(self._setup().status_code, 303)
+        added = self.client.post(
+            "/tasks",
+            data={"title": "Реализовать рассылку", "project": "визасмарт"},
+            follow_redirects=False,
+        )
+        self.assertEqual(added.status_code, 303)
+        all_board = self.client.get("/")
+        self.assertEqual(all_board.status_code, 200)
+        self.assertIn("kanban", all_board.text)
+        self.assertIn('data-project="ресторис"', all_board.text)
+        self.assertIn('data-project="визасмарт"', all_board.text)
+        self.assertIn("все ", all_board.text)
+        filtered = self.client.get("/?project=визасмарт")
+        self.assertEqual(filtered.status_code, 200)
+        self.assertIn('data-project="визасмарт"', filtered.text)
+        self.assertNotIn('data-project="ресторис"', filtered.text)
+        self.assertIn("Реализовать рассылку", filtered.text)
 
     def test_import_markdown_keeps_stages(self):
         from planner.server.db import connect, import_markdown, list_tasks

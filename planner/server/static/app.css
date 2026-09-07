@@ -29,6 +29,7 @@ html, body { margin: 0; padding: 0; background: var(--bg); color: var(--ink); fo
 }
 button.primary { background: var(--accent); color: #fff; border-color: var(--accent); width: 100%; }
 main { max-width: 720px; margin: 0 auto; padding: 16px 16px 80px; }
+main.board-page { max-width: none; padding: 12px 12px 72px; }
 .card {
   background: var(--card); border: 1px solid var(--line); border-radius: 16px;
   padding: 16px; margin: 0 0 14px;
@@ -74,6 +75,76 @@ fieldset { border: 1px solid var(--line); border-radius: 12px; padding: 12px; }
 .inline button { min-height: 36px; }
 .toolbar { display: flex; gap: 10px; flex-wrap: wrap; margin-bottom: 14px; }
 .toolbar form { flex: 1; }
+.next-bar {
+  display: flex; flex-wrap: wrap; gap: 8px 14px; align-items: baseline;
+  padding: 10px 14px; margin-bottom: 10px;
+  background: var(--card); border: 1px solid var(--line); border-radius: 14px;
+}
+.next-bar strong { color: var(--brand); }
+.next-bar span { color: var(--muted); font-size: 14px; }
+.chips {
+  display: flex; gap: 8px; overflow-x: auto; padding: 4px 0 12px;
+  position: sticky; top: 56px; z-index: 1; background: var(--bg);
+  -webkit-overflow-scrolling: touch;
+}
+.chip {
+  flex: 0 0 auto; text-decoration: none; color: var(--ink);
+  background: var(--card); border: 1px solid var(--line);
+  border-radius: 999px; padding: 8px 12px; font-size: 14px; min-height: 40px;
+  display: inline-flex; align-items: center;
+}
+.chip.on { background: var(--brand); color: #fff; border-color: var(--brand); }
+.chip.focus:not(.on) { border-color: var(--accent); color: var(--accent); }
+.composer {
+  background: var(--card); border: 1px solid var(--line); border-radius: 14px;
+  padding: 8px 14px; margin-bottom: 12px;
+}
+.composer summary { cursor: pointer; font-weight: 600; padding: 8px 0; }
+.kanban {
+  display: flex; gap: 12px; align-items: stretch;
+  overflow-x: auto; scroll-snap-type: x mandatory;
+  padding-bottom: 12px; -webkit-overflow-scrolling: touch;
+}
+.kanban-col {
+  flex: 0 0 min(86vw, 340px);
+  scroll-snap-align: start;
+  background: #efe8dc;
+  border: 1px solid var(--line);
+  border-radius: 16px;
+  padding: 10px;
+  min-height: 40vh;
+  max-height: calc(100vh - 220px);
+  overflow-y: auto;
+}
+.kanban-one .kanban-col {
+  flex: 1 1 auto;
+  max-width: 640px;
+  max-height: none;
+}
+.kanban-col.is-focus { background: #e7f0e8; border-color: #b7cfc0; }
+.col-head {
+  display: flex; align-items: center; gap: 8px; margin-bottom: 8px;
+  position: sticky; top: 0; background: inherit; padding-bottom: 6px;
+}
+.col-head h2 { margin: 0; font-size: 1rem; flex: 1; }
+.col-head .count { color: var(--muted); font-size: 13px; }
+.focus-tag {
+  font-size: 12px; color: var(--accent); border: 1px solid var(--accent);
+  border-radius: 999px; padding: 2px 8px;
+}
+button.quiet, .quiet {
+  min-height: 32px; padding: 4px 8px; font-size: 13px; background: transparent;
+}
+.task.card { padding: 12px; margin: 0 0 10px; }
+.task-actions { display: flex; gap: 8px; margin-top: 8px; }
+button.slim { width: auto; padding: 8px 12px; }
+.more { margin-top: 8px; }
+.more summary { cursor: pointer; color: var(--muted); font-size: 14px; }
+.empty { padding: 12px 4px; }
 @media (min-width: 800px) {
   html, body { font-size: 16px; }
+}
+@media (min-width: 1100px) {
+  .kanban { overflow-x: visible; }
+  .kanban-col { flex: 1 1 0; min-width: 240px; max-width: 380px; }
 }

@@ -122,8 +122,10 @@ def detect_project(text: str, focus: str = "") -> str:
         return found
     blob = normalize_typos(text.lower())
     if any(word in blob for word in ("таблиц", "упаков", "воронк")):
-        return normalize_project(focus) or "ресторис"
-    return normalize_project(focus) or "другое"
+        return "ресторис"
+    # Unknown work stays «другое». Never dump it into the current focus.
+    _ = focus
+    return "другое"
 
 
 WEEKDAYS = {
@@ -183,7 +185,7 @@ def suggest_stages(title: str, project: str, note: str = "") -> list[str]:
         if any(hint in blob for hint in hints):
             return list(stages)
     task = Task(status=" ", title=title, project=project, note=note)
-    if should_decompose(task) or len(title.split()) <= 3:
+    if should_decompose(task):
         return [
             "Собрать вводные и критерий готово",
             "Сделать основную работу",
@@ -217,14 +219,14 @@ def ingest_thesis(
     note: str | None = None,
 ) -> IngestResult:
     today = today or date.today()
+    board_focus = focus or db.get_setting(conn, "focus")
     title = title or formulate_title(raw)
-    project = project or detect_project(
-        raw, focus=focus or db.get_setting(conn, "focus")
-    )
+    project = project or detect_project(raw, focus="")
+    due = due or parse_ru_due(raw, today=today)
     reused = _match_existing(conn, title, project)
     note = note or f"из чата: {raw.strip()}"
     task = Task(status="~", title=title, project=project, note=note, due=due)
-    scored = score_priority(task, today=today, focus=project)
+    scored = score_priority(task, today=today, focus=board_focus)
     stages = suggest_stages(title, project, note)
     due_s = due.isoformat() if due else None
     parent_id = db.insert_task(
@@ -275,15 +277,19 @@ def ingest_thesis(
     )
 
 
-def format_result(result: IngestResult) -> str:
-    lines = [
-        f"{result.priority} · {result.title}",
-        f"проект: {result.project} · {result.why}",
-    ]
+def format_result(result: IngestResult, focus: str = "") -> str:
+    lines = [f"на доске · {result.priority} · {result.title}"]
+    focus_n = normalize_project(focus) if focus else None
+    project_line = result.project
+    if focus_n and result.project != focus_n:
+        project_line += f" · фокус остаётся {focus_n}"
+    elif focus_n and result.project == focus_n:
+        project_line += " · в фокусе"
+    lines.append(project_line)
     if result.reused:
         lines.append(f"похоже на уже стоящее: {result.reused}")
     if result.stages:
-        lines.append("этапы:")
-        for index, stage in enumerate(result.stages, start=1):
-            lines.append(f"{index}. {stage}")
+        lines.append(f"этап 1: {result.stages[0]}")
+    if result.project == "другое":
+        lines.append("проект? ресторис / визмарт / мобилог")
     return "\n".join(lines)
