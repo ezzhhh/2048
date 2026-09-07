@@ -24,14 +24,28 @@ PROJECT_HINTS = (
     (("личное", "дом", "семья"), "личное"),
 )
 
+TYPOS = (
+    ("талиц", "таблиц"),
+    ("талицу", "таблицу"),
+    ("таллиц", "таблиц"),
+)
+
+
+def normalize_typos(text: str) -> str:
+    out = text
+    for bad, good in TYPOS:
+        out = out.replace(bad, good)
+    return out
+
+
 STAGE_PACKS = (
     (
-        ("таблиц", "учёт", "остатк"),
+        ("таблиц", "талиц", "учёт", "остатк", "упаков"),
         (
-            "Зафиксировать поля: наличие / расход / остатки",
-            "Выбрать носитель таблицы",
-            "Назначить кто обновляет и когда",
-            "Проверить на одном примере",
+            "Какие поля: наличие, расход, остатки — или другие?",
+            "Где живёт таблица: Sheets, amo, своя?",
+            "Кто обновляет и в какой момент сделки?",
+            "Проверить на одной реальной отгрузке",
         ),
     ),
     (
@@ -67,15 +81,17 @@ class IngestResult:
 
 
 def detect_project(text: str, focus: str = "") -> str:
-    blob = text.lower()
+    blob = normalize_typos(text.lower())
     for hints, project in PROJECT_HINTS:
         if any(hint in blob for hint in hints):
             return project
+    if any(word in blob for word in ("таблиц", "реализов", "сделк", "воронк")):
+        return normalize_project(focus) or "ресторис"
     return normalize_project(focus) or "другое"
 
 
 def formulate_title(raw: str) -> str:
-    text = " ".join(raw.strip().split())
+    text = " ".join(normalize_typos(raw.strip()).split())
     if not text:
         return ""
     first, *rest = text.split(None, 1)
@@ -96,9 +112,10 @@ def suggest_stages(title: str, project: str, note: str = "") -> list[str]:
     task = Task(status=" ", title=title, project=project, note=note)
     if should_decompose(task) or len(title.split()) <= 3:
         return [
-            "Уточнить, как выглядит готово",
-            "Сделать основную работу",
-            "Проверить результат",
+            "Что именно должно получиться — один проверяемый результат?",
+            "В каком проекте это делать, если не restoris?",
+            "Сделать",
+            "Как проверим, что готово?",
         ]
     return []
 

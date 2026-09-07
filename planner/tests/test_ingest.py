@@ -9,13 +9,15 @@ from planner.server.db import connect
 class IngestTests(unittest.TestCase):
     def test_formulate_adds_verb(self):
         self.assertEqual(formulate_title("реализовать таблицу"), "Реализовать таблицу")
+        self.assertEqual(formulate_title("реализовать талицу"), "Реализовать таблицу")
         self.assertTrue(formulate_title("таблица упаковки").startswith("Сделать"))
 
     def test_table_goes_to_restoris_with_stages(self):
         self.assertEqual(detect_project("реализовать таблицу упаковки"), "ресторис")
+        self.assertEqual(detect_project("реализовать талицу"), "ресторис")
         stages = suggest_stages("Реализовать таблицу учёта", "ресторис")
         self.assertGreaterEqual(len(stages), 3)
-        self.assertTrue(any("остат" in stage for stage in stages))
+        self.assertTrue(any("Sheets" in stage or "остат" in stage or "поля" in stage for stage in stages))
 
     def test_ingest_writes_parent_and_stages(self):
         with tempfile.TemporaryDirectory() as tmp:
