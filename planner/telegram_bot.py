@@ -8,7 +8,14 @@ from pathlib import Path
 
 import httpx
 
-from planner.ingest import format_result, ingest_thesis
+from planner.ingest import format_result
+from planner.interview import (
+    active_draft,
+    add_answer,
+    cancel_draft,
+    finish_draft,
+    start_draft,
+)
 from planner.engine import suggest_next_steps, Board
 from planner.server import db
 from planner.server.db import row_to_task
@@ -69,8 +76,18 @@ def _handle(conn, text: str) -> str:
             )
             return f"готово: {row['title']}"
         return "не нашёл задачу"
-    result = ingest_thesis(conn, raw, focus=db.get_setting(conn, "focus"))
-    return format_result(result)
+    if low in {"отмена", "/отмена", "стоп"}:
+        cancel_draft(conn)
+        return "черновик сброшен"
+    draft = active_draft(conn)
+    if draft:
+        draft = add_answer(conn, raw)
+        if draft and draft["step"] < len(draft["questions"]):
+            return draft["questions"][draft["step"]]
+        result = finish_draft(conn, draft)
+        return "На доске:\n" + format_result(result)
+    question = start_draft(conn, raw)
+    return f"Коротко уточню (максимум 3).\n\n{question}"
 
 
 def run() -> None:

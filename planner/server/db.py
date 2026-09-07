@@ -40,6 +40,14 @@ CREATE TABLE IF NOT EXISTS settings (
     key TEXT PRIMARY KEY,
     value TEXT NOT NULL
 );
+CREATE TABLE IF NOT EXISTS drafts (
+    id INTEGER PRIMARY KEY CHECK (id = 1),
+    raw TEXT NOT NULL DEFAULT '',
+    answers TEXT NOT NULL DEFAULT '[]',
+    step INTEGER NOT NULL DEFAULT 0,
+    questions TEXT NOT NULL DEFAULT '[]',
+    status TEXT NOT NULL DEFAULT ''
+);
 """
 
 
