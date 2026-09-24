@@ -1,0 +1,99 @@
+<!-- Сетка 8 услуг. Клик → /request -->
+<style>
+  .hk-services {
+    padding: 48px 40px;
+    background: #F5F7FA;
+    font-family: Manrope, Montserrat, Arial, sans-serif;
+  }
+  .hk-services h2 {
+    margin: 0 0 8px;
+    text-align: center;
+    color: #0B2A5B;
+    font-size: 32px;
+  }
+  .hk-services__sub {
+    text-align: center;
+    color: #5A6570;
+    margin: 0 0 32px;
+    font-size: 15px;
+  }
+  .hk-services__grid {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 16px;
+    max-width: 1200px;
+    margin: 0 auto 28px;
+  }
+  .hk-card {
+    display: flex;
+    flex-direction: column;
+    justify-content: space-between;
+    min-height: 160px;
+    padding: 20px;
+    border-radius: 14px;
+    text-decoration: none;
+    color: #fff;
+    background: linear-gradient(160deg, #0B2A5B 0%, #1E6FBF 100%);
+    border: 1px solid rgba(192,198,206,0.35);
+    transition: transform 0.15s ease, box-shadow 0.15s ease;
+  }
+  .hk-card:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 8px 24px rgba(11,42,91,0.25);
+  }
+  .hk-card h3 {
+    margin: 0;
+    font-size: 16px;
+    font-weight: 600;
+    line-height: 1.3;
+  }
+  .hk-card span {
+    align-self: flex-end;
+    font-size: 20px;
+    opacity: 0.9;
+  }
+  .hk-services__actions {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+    max-width: 520px;
+    margin: 0 auto;
+  }
+  .hk-services__actions a {
+    display: block;
+    text-align: center;
+    padding: 14px 18px;
+    border-radius: 12px;
+    text-decoration: none;
+    font-weight: 600;
+    color: #fff;
+    background: linear-gradient(135deg, #0B2A5B, #1E6FBF);
+  }
+  @media (max-width: 1000px) {
+    .hk-services__grid { grid-template-columns: repeat(2, 1fr); }
+    .hk-services { padding: 32px 16px; }
+  }
+  @media (max-width: 560px) {
+    .hk-services__grid { grid-template-columns: 1fr; }
+    .hk-services h2 { font-size: 24px; }
+  }
+</style>
+
+<section class="hk-services">
+  <h2>Наши услуги</h2>
+  <p class="hk-services__sub">Рефрижераторные перевозки по типам грузов · Москва — Дальний Восток</p>
+  <div class="hk-services__grid">
+    <a class="hk-card" href="/request?cargo=milk"><h3>Перевозка молочной продукции</h3><span>›</span></a>
+    <a class="hk-card" href="/request?cargo=meat"><h3>Перевозка мясной продукции</h3><span>›</span></a>
+    <a class="hk-card" href="/request?cargo=grocery"><h3>Перевозка бакалеи</h3><span>›</span></a>
+    <a class="hk-card" href="/request?cargo=frozen"><h3>Перевозка замороженных продуктов</h3><span>›</span></a>
+    <a class="hk-card" href="/request?cargo=produce"><h3>Перевозка овощей, фруктов, ягод</h3><span>›</span></a>
+    <a class="hk-card" href="/request?cargo=cosmo"><h3>Перевозка косметики и бытовой химии</h3><span>›</span></a>
+    <a class="hk-card" href="/request?cargo=pharma"><h3>Перевозка медикаментов и медоборудования</h3><span>›</span></a>
+    <a class="hk-card" href="/request?cargo=fmcg"><h3>Перевозка товаров народного потребления</h3><span>›</span></a>
+  </div>
+  <div class="hk-services__actions">
+    <a href="/request">Рассчитать стоимость ›</a>
+    <a href="/">Вернуться на главную страницу ›</a>
+  </div>
+</section>

@@ -1,0 +1,61 @@
+<!-- Блок парка 86 / 93 / 105 -->
+<style>
+  .hk-fleet {
+    padding: 56px 40px;
+    background: #fff;
+    font-family: Manrope, Montserrat, Arial, sans-serif;
+    text-align: center;
+  }
+  .hk-fleet h2 {
+    margin: 0 0 12px;
+    color: #0B2A5B;
+    font-size: 32px;
+  }
+  .hk-fleet__text {
+    margin: 0 auto 32px;
+    max-width: 640px;
+    color: #5A6570;
+    font-size: 16px;
+    line-height: 1.5;
+  }
+  .hk-fleet__grid {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 16px;
+    max-width: 900px;
+    margin: 0 auto;
+  }
+  .hk-fleet__item {
+    border: 1px solid #C0C6CE;
+    border-radius: 14px;
+    padding: 28px 16px;
+    background: linear-gradient(180deg, #fff 0%, #F3F7FC 100%);
+  }
+  .hk-fleet__item strong {
+    display: block;
+    font-size: 36px;
+    color: #0B2A5B;
+    margin-bottom: 6px;
+  }
+  .hk-fleet__item span {
+    color: #5A6570;
+    font-size: 14px;
+  }
+  @media (max-width: 720px) {
+    .hk-fleet { padding: 40px 16px; }
+    .hk-fleet__grid { grid-template-columns: 1fr; }
+    .hk-fleet h2 { font-size: 24px; }
+  }
+</style>
+
+<section class="hk-fleet">
+  <h2>Собственный рефрижераторный парк</h2>
+  <p class="hk-fleet__text">
+    Подбираем машину под партию — без переплат за лишний объём и без недогруза.
+  </p>
+  <div class="hk-fleet__grid">
+    <div class="hk-fleet__item"><strong>86 м³</strong><span>Рефрижератор</span></div>
+    <div class="hk-fleet__item"><strong>93 м³</strong><span>Рефрижератор</span></div>
+    <div class="hk-fleet__item"><strong>105 м³</strong><span>Рефрижератор</span></div>
+  </div>
+</section>

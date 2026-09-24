@@ -1,0 +1,41 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Превью — Хладокомбинат Щелковский</title>
+  <style>
+    body { margin: 0; background: #eef1f5; }
+    .preview-note {
+      font-family: Manrope, Arial, sans-serif;
+      background: #fff3cd;
+      padding: 12px 16px;
+      font-size: 14px;
+      border-bottom: 1px solid #e6d89c;
+    }
+  </style>
+</head>
+<body>
+  <div class="preview-note">
+    Локальное превью блоков для Tilda Zero Block. Это не финальный сайт — сборка идёт в Tilda.
+  </div>
+  <div id="header"></div>
+  <div id="hero"></div>
+  <div id="route"></div>
+  <div id="facts"></div>
+  <div id="fleet"></div>
+  <div id="services"></div>
+  <script>
+    async function load(id, file) {
+      const res = await fetch('./zero-blocks/' + file);
+      document.getElementById(id).innerHTML = await res.text();
+    }
+    load('header', 'header.html');
+    load('hero', 'hero.html');
+    load('route', 'route-bar.html');
+    load('facts', 'facts.html');
+    load('fleet', 'fleet.html');
+    load('services', 'services-grid.html');
+  </script>
+</body>
+</html>

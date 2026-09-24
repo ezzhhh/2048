@@ -1,0 +1,99 @@
+<!--
+  Hero — первый экран главной
+  В Zero Block можно заменить фон на изображение рефа (background-image).
+-->
+<style>
+  .hk-hero {
+    position: relative;
+    padding: 72px 40px 64px;
+    background: linear-gradient(135deg, #0B2A5B 0%, #1E6FBF 100%);
+    color: #fff;
+    font-family: Manrope, Montserrat, Arial, sans-serif;
+    overflow: hidden;
+  }
+  .hk-hero__inner {
+    max-width: 780px;
+    position: relative;
+    z-index: 1;
+  }
+  .hk-hero__eyebrow {
+    font-size: 13px;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    opacity: 0.85;
+    margin-bottom: 16px;
+  }
+  .hk-hero h1 {
+    margin: 0 0 16px;
+    font-size: 42px;
+    line-height: 1.15;
+    font-weight: 700;
+  }
+  .hk-hero p {
+    margin: 0 0 28px;
+    font-size: 18px;
+    line-height: 1.5;
+    opacity: 0.95;
+    max-width: 560px;
+  }
+  .hk-hero__fleet {
+    display: flex;
+    gap: 10px;
+    flex-wrap: wrap;
+    margin-bottom: 28px;
+  }
+  .hk-hero__fleet span {
+    border: 1px solid rgba(192, 198, 206, 0.7);
+    color: #fff;
+    padding: 8px 14px;
+    border-radius: 8px;
+    font-size: 14px;
+    font-weight: 600;
+  }
+  .hk-hero__actions {
+    display: flex;
+    gap: 12px;
+    flex-wrap: wrap;
+  }
+  .hk-btn {
+    display: inline-block;
+    padding: 14px 22px;
+    border-radius: 10px;
+    text-decoration: none;
+    font-weight: 600;
+    font-size: 15px;
+  }
+  .hk-btn--red {
+    background: #E31C3D;
+    color: #fff;
+  }
+  .hk-btn--ghost {
+    background: transparent;
+    color: #fff;
+    border: 1px solid rgba(255,255,255,0.7);
+  }
+  @media (max-width: 720px) {
+    .hk-hero { padding: 48px 16px 40px; }
+    .hk-hero h1 { font-size: 28px; }
+    .hk-hero p { font-size: 16px; }
+    .hk-hero__actions { flex-direction: column; }
+    .hk-btn { text-align: center; }
+  }
+</style>
+
+<section class="hk-hero">
+  <div class="hk-hero__inner">
+    <div class="hk-hero__eyebrow">Собственный рефрижераторный парк</div>
+    <h1>Рефрижераторные перевозки Москва — Дальний Восток</h1>
+    <p>Работаем как исполнители: свой транспорт, температурный режим, маршрут туда и обратно.</p>
+    <div class="hk-hero__fleet">
+      <span>86 м³</span>
+      <span>93 м³</span>
+      <span>105 м³</span>
+    </div>
+    <div class="hk-hero__actions">
+      <a class="hk-btn hk-btn--red" href="/request">Рассчитать перевозку</a>
+      <a class="hk-btn hk-btn--ghost" href="#WHATSAPP_LINK" target="_blank" rel="noopener">Написать в мессенджер</a>
+    </div>
+  </div>
+</section>

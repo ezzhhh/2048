@@ -1,0 +1,61 @@
+<!--
+  Tilda Zero Block → Edit HTML/CSS
+  Вставить HTML в контейнер, CSS — во вкладку Style / или <style> ниже.
+  Заменить #WHATSAPP_LINK на реальную ссылку.
+-->
+<style>
+  .hk-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 24px;
+    padding: 16px 40px;
+    background: #fff;
+    border-bottom: 1px solid #E6EAF0;
+    font-family: Manrope, Montserrat, Arial, sans-serif;
+  }
+  .hk-logo {
+    font-weight: 700;
+    font-size: 18px;
+    color: #0B2A5B;
+    text-decoration: none;
+    white-space: nowrap;
+  }
+  .hk-nav {
+    display: flex;
+    gap: 28px;
+    flex-wrap: wrap;
+  }
+  .hk-nav a {
+    color: #1A1A1A;
+    text-decoration: none;
+    font-size: 15px;
+  }
+  .hk-nav a:hover { color: #1E4F9C; }
+  .hk-cta {
+    background: #E31C3D;
+    color: #fff !important;
+    text-decoration: none;
+    padding: 12px 20px;
+    border-radius: 10px;
+    font-size: 14px;
+    font-weight: 600;
+    white-space: nowrap;
+  }
+  .hk-cta:hover { opacity: 0.92; }
+  @media (max-width: 960px) {
+    .hk-header { flex-wrap: wrap; padding: 12px 16px; }
+    .hk-nav { width: 100%; gap: 16px; }
+  }
+</style>
+
+<div class="hk-header">
+  <a class="hk-logo" href="/">Хладокомбинат «Щелковский»</a>
+  <nav class="hk-nav">
+    <a href="/">Главная</a>
+    <a href="/services">Услуги</a>
+    <a href="/request">Online-заявка</a>
+    <a href="/contacts">Контакты</a>
+  </nav>
+  <a class="hk-cta" href="#WHATSAPP_LINK" target="_blank" rel="noopener">Написать в мессенджер</a>
+</div>
