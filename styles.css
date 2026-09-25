@@ -12,6 +12,7 @@
   --line-dark: rgba(26, 49, 72, 0.16);
   --line-light: rgba(243, 234, 220, 0.28);
   --gold: #b08958;
+  --bronze: #6b4f32;
   --serif: "Libre Baskerville", "Iowan Old Style", Palatino, "Palatino Linotype", Georgia, serif;
   --sans: "Source Sans 3", "Segoe UI", sans-serif;
   --wrap: 68rem;
@@ -321,7 +322,7 @@ blockquote p {
 .step-index {
   display: block;
   margin-bottom: 0.55rem;
-  color: var(--gold);
+  color: var(--bronze);
   font-family: var(--serif);
   font-size: 0.95rem;
   letter-spacing: 0.08em;
